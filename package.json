@@ -1,0 +1,16 @@
+{
+  "name": "valley-animal-sanctuary",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "python3 -m http.server 4173",
+    "start": "python3 -m http.server 4173",
+    "test": "node --check game.js && node tests/smoke.cjs"
+  },
+  "dependencies": {
+    "gsap": "^3.13.0"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0"
+  }
+}

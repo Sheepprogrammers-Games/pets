@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#224d35" />
+  <meta name="description" content="经营山谷动物家园，在不同地点与时间照管、救助和收养动物。" />
+  <title>山谷动物家园</title>
+  <link rel="icon" href="assets/ui/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/ui/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/ui/site-icon-512.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/ui/apple-touch-icon.png" />
+  <link rel="stylesheet" href="styles.css?v=81" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-cluster">
+      <button class="brand" id="brandButton" aria-label="返回山谷地图">
+        <span class="brand-mark" aria-hidden="true"><svg><use href="assets/sprites.svg#icon-paw"></use></svg></span>
+        <span><b>山谷动物家园</b><small>春季照管期</small></span>
+      </button>
+      <button class="calendar-entry" id="calendarButton" aria-label="打开经营日历" title="经营日历">
+        <svg aria-hidden="true"><use href="assets/sprites.svg#icon-calendar"></use></svg>
+        <span><small>经营日历</small><b id="seasonLabel">第 1 天</b></span>
+      </button>
+    </div>
+    <div class="clock" aria-label="当前游戏时间" aria-live="polite">
+      <span class="sun-indicator" id="sunIndicator" aria-hidden="true"></span>
+      <div class="clock-copy">
+        <div class="clock-value"><small id="periodLabel">清晨</small><b id="timeLabel">07:00</b></div>
+        <div class="day-progress" role="progressbar" aria-label="今日时间进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="timeProgress"></span></div>
+      </div>
+      <button class="time-step" id="advanceButton" title="让山谷时间向前推进 30 分钟" aria-label="推进游戏时间 30 分钟">
+        <span class="advance-clock" id="advanceClock" aria-hidden="true"><i class="advance-hour" id="advanceHourHand"></i><i class="advance-minute" id="advanceMinuteHand"></i><u></u></span>
+        <span class="advance-copy"><small>推进时间</small><b>+30 分钟</b></span>
+      </button>
+    </div>
+    <div class="resources">
+      <div class="resource level" title="家园等级"><svg aria-hidden="true"><use href="assets/sprites.svg#icon-note"></use></svg><span><small>家园</small><b id="sanctuaryLevel">Lv.1</b></span></div>
+      <div class="resource" title="山谷口碑"><svg aria-hidden="true"><use href="assets/sprites.svg#icon-heart"></use></svg><span><small>口碑</small><b id="reputation">0</b></span></div>
+      <div class="resource coins" title="家园金币"><svg aria-hidden="true"><use href="assets/sprites.svg#icon-coin"></use></svg><span><small>金币</small><b id="coins">0</b></span></div>
+      <div class="save-status" id="saveStatus" role="status" aria-live="polite" title="游戏进度会自动保存"><i aria-hidden="true"></i><span id="saveStatusLabel">自动保存</span></div>
+      <button class="icon-button inventory-button" id="inventoryButton" aria-label="打开物资背包" title="物资背包"><svg aria-hidden="true"><use href="assets/sprites.svg#icon-cup"></use></svg><span id="backpackCount">14</span></button>
+      <button class="icon-button" id="soundButton" aria-label="关闭音效" aria-pressed="false" title="音效"><svg aria-hidden="true"><use href="assets/sprites.svg#icon-music"></use></svg></button>
+      <button class="icon-button journal-button" id="helpButton" aria-label="打开经营日志" title="经营日志"><svg aria-hidden="true"><use href="assets/sprites.svg#icon-note"></use></svg><span class="journal-badge" id="journalBadge" hidden>0</span></button>
+    </div>
+  </header>
+
+  <main class="game-world">
+    <section class="world-view" id="worldView" aria-label="山谷地图">
+      <div class="world-panorama" id="worldPanorama" aria-label="可横向探索的山谷地图" tabindex="0">
+        <div class="world-map-plane" id="worldMapPlane">
+        <img class="world-map world-map-previous" id="worldMapPrevious" src="assets/world/world-map.webp" alt="" width="1672" height="941" aria-hidden="true" hidden draggable="false" />
+        <picture class="world-picture">
+          <source media="(max-width: 640px)" srcset="assets/world/world-map-mobile.webp" />
+          <img class="world-map" id="worldMap" src="assets/world/world-map.webp" alt="包含十一个可探索地点的山谷地图" width="1672" height="941" fetchpriority="high" decoding="async" draggable="false" />
+        </picture>
+        </div>
+        <div class="map-scene-transition" id="mapSceneTransition" aria-hidden="true"><span>地图场景</span><b id="mapSceneTransitionLabel">山谷昼景</b></div>
+        <nav class="map-locations" id="mapLocations" aria-label="山谷地点"></nav>
+        <div class="world-expansions" id="worldExpansions" aria-label="已解锁地图扩展"></div>
+      </div>
+      <div class="scene-ambient world-ambient" id="worldAmbient" aria-hidden="true">
+        <i class="wind-breath" style="top:32%"></i><i class="wind-breath" style="top:63%"></i>
+        <i class="world-cloud-band" style="top:18%;--cloud-width:34%"></i><i class="world-cloud-band" style="top:52%;--cloud-width:46%"></i>
+        <i class="canopy-shadow" style="left:7%;top:30%;width:20%;height:28%"></i><i class="canopy-shadow" style="left:76%;top:54%;width:19%;height:25%"></i>
+      </div>
+      <div class="daylight-layer" id="daylightLayer" aria-hidden="true"></div>
+      <div class="weather-fx" data-weather-fx aria-hidden="true"></div>
+      <div class="weather" id="weatherDisplay"><span aria-hidden="true"></span><b>天气晴朗</b><small>适合外出巡访</small></div>
+      <div class="world-heading">
+        <p id="worldSummary">山谷正在醒来</p>
+        <h1>今天去哪里？</h1>
+        <p class="first-day-hook" id="firstDayHook" hidden>救助站门口有一只纸箱。你可以先回家喂奶糖，也可以先去听听那只垂耳兔。</p>
+        <span class="map-theme-label" id="mapThemeLabel" aria-live="polite">山谷昼景 · 森林、湖畔与各地点总览</span>
+        <div class="world-rank" aria-live="polite"><span><b id="rankTitle">新任照管员</b><small id="rankProgressText">累计口碑 5 / 10</small></span><i role="progressbar" aria-label="家园等级进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"><u id="rankProgress"></u></i></div>
+      </div>
+      <strong class="care-streak" id="careStreak" title="连续完成至少四项生活日程"><svg aria-hidden="true"><use href="assets/sprites.svg#icon-heart"></use></svg><span><b>照管连胜</b><small>0 天</small></span></strong>
+      <div class="map-pan-controls" aria-label="移动地图"><button type="button" id="mapPanPrev" aria-label="向左查看地图" title="向左查看地图">←</button><button type="button" id="mapPanNext" aria-label="向右查看地图" title="向右查看地图">→</button><button type="button" id="mapThemeButton" aria-label="切换大地图场景" title="切换大地图场景">◐</button></div>
+      <div class="event-ticker" id="eventTicker" aria-live="polite"></div>
+    </section>
+
+    <section class="location-view" id="locationView" hidden aria-label="地点场景">
+      <img class="location-art" id="locationArt" src="assets/rooms/lounge.webp" alt="动物家园" width="1200" height="800" />
+      <div class="scene-ambient location-ambient" id="locationAmbient" aria-hidden="true">
+        <i class="location-foliage-copy"></i>
+        <i class="wind-breath" style="top:28%"></i><i class="wind-breath" style="top:56%"></i>
+      </div>
+      <div class="daylight-layer" id="locationDaylight" aria-hidden="true"></div>
+      <div class="weather-fx" data-weather-fx aria-hidden="true"></div>
+      <div class="location-details" id="locationDetails" aria-label="场景环境细节"></div>
+      <button class="back-map" id="backMapButton"><span aria-hidden="true">←</span> 山谷地图</button>
+      <div class="location-heading">
+        <p id="locationKicker">生活区</p>
+        <h1 id="locationTitle">动物家园</h1>
+        <span id="locationStatus">日常照料开放</span>
+      </div>
+      <div class="scene-ground" aria-hidden="true"></div>
+      <div class="home-furnishings" id="homeFurnishings" aria-label="家园家具"></div>
+      <div class="sleep-nest" id="sleepNest" aria-hidden="true" hidden><img src="assets/props/starter-bed.webp" alt="" draggable="false" /></div>
+      <img class="pet-sprite" id="petSprite" src="assets/pets/actions/dog/idle-0.webp" alt="正在家园活动的动物" width="512" height="512" draggable="false" data-action="idle" data-frame="0" />
+      <img class="companion-sprite" id="companionSprite" src="assets/pets/actions/cat/idle-0.webp" alt="一同活动的动物伙伴" width="512" height="512" draggable="false" hidden />
+      <div class="speech-bubble" id="speechBubble" role="status">它在等你安排今天的活动。</div>
+      <div class="sleep-status" id="sleepStatus" hidden><b>正在休息</b><span id="sleepDuration">0 分钟</span></div>
+      <div class="scene-explorer" id="sceneExplorer" hidden aria-label="场景任务"><span class="scene-index" id="sceneIndex" aria-live="polite">1 / 3</span><button class="scene-nav" id="scenePrev" type="button" aria-label="查看左侧任务" title="查看上一项任务">←</button><div class="scene-track" id="sceneTrack"></div><button class="scene-nav" id="sceneNext" type="button" aria-label="查看下一项任务" title="查看下一项任务">→</button></div>
+      <aside class="location-panel" id="locationPanel" tabindex="-1" aria-label="当前地点管理面板" aria-live="polite"></aside>
+      <div class="mini-game" id="miniGame" hidden></div>
+      <div class="status-float" id="statusFloat" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <section class="pet-dock" id="petDock" aria-label="已收养动物">
+    <div class="dock-title"><span id="homeCapacity">1 / 2</span><b>家园伙伴</b></div>
+    <div class="pet-roster" id="petRoster"></div>
+    <button class="dock-action" id="goHomeButton"><svg aria-hidden="true"><use href="assets/sprites.svg#icon-paw"></use></svg><span>回家照料</span></button>
+  </section>
+  <button class="dock-toggle" id="dockToggle" aria-label="显示更多家园伙伴" aria-expanded="false" title="显示更多家园伙伴" hidden><span aria-hidden="true">更多</span></button>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+
+  <section class="weather-transition" id="weatherTransition" role="status" aria-live="assertive" hidden>
+    <div class="weather-transition-scene" id="weatherTransitionScene" aria-hidden="true"></div>
+    <div class="weather-transition-panel">
+      <small>次日天气预告</small>
+      <div><span id="weatherFromLabel">天气晴朗</span><i aria-hidden="true"></i><b id="weatherToLabel">云层渐厚</b></div>
+      <p id="weatherTransitionNote">凉爽，适合健康检查</p>
+    </div>
+  </section>
+
+  <section class="time-transition" id="timeTransition" role="status" aria-live="assertive" hidden>
+    <div class="time-transition-clock" aria-hidden="true">
+      <i class="time-hour-hand" id="timeHourHand"></i><i class="time-minute-hand" id="timeMinuteHand"></i><u></u>
+      <span class="time-mark mark-12">12</span><span class="time-mark mark-3">3</span><span class="time-mark mark-6">6</span><span class="time-mark mark-9">9</span>
+    </div>
+    <div class="time-transition-copy">
+      <small>山谷时间正在推进</small>
+      <b id="timeTransitionLive">07:00</b>
+      <span><i id="timeTransitionFrom">07:00</i><u></u><i id="timeTransitionTo">07:30</i></span>
+    </div>
+  </section>
+
+  <dialog id="inventoryDialog" aria-labelledby="inventoryTitle">
+    <form method="dialog" class="dialog-sheet">
+      <button class="dialog-close" aria-label="关闭">×</button>
+      <p class="dialog-kicker">随身物资</p>
+      <div class="backpack-heading"><h2 id="inventoryTitle">物资背包</h2><span id="backpackCapacity">14 / 24</span></div>
+      <div class="inventory-grid" id="inventoryGrid"></div>
+      <div class="inventory-detail" id="inventoryDetail"></div>
+      <div class="routine-summary" id="routineSummary"></div>
+      <p class="dialog-note">物资可直接给当前伙伴使用，或在照料和突发事件中消耗。背包满时需要先使用物资或在集市扩容。</p>
+      <button class="secondary-button" value="close">收好背包</button>
+    </form>
+  </dialog>
+
+  <dialog id="helpDialog" aria-labelledby="helpTitle">
+    <form method="dialog" class="dialog-sheet help-sheet journal-sheet">
+      <button class="dialog-close" aria-label="关闭">×</button>
+      <p class="dialog-kicker">经营中心</p>
+      <h2 id="helpTitle">山谷经营日志</h2>
+      <div id="journalContent"></div>
+      <details class="manual-details"><summary>山谷手册</summary><ol>
+          <li><b>留意时间与地图：</b>不同地点会在清晨、午后和傍晚出现不同事件。</li>
+          <li><b>亲自处理：</b>进入地点，用喂食、搜索、清洁、抚摸或追球完成事件。</li>
+          <li><b>管理背包：</b>物资有容量限制，可以直接给当前伙伴使用，也会在事件中消耗。</li>
+          <li><b>遵循个性：</b>动物有不同偏好、活跃时段与待机习惯，合适的安排会获得额外成长。</li>
+          <li><b>完成生活日程：</b>安排早餐、外出、陪伴、清洁和足够睡眠，影响次日健康与精力。</li>
+          <li><b>提升家园等级：</b>累计口碑会解锁新的山谷地点，每天还会出现不同的偶遇。</li>
+          <li><b>扩大家园：</b>救助动物后办理领养，或在集市购买动物、补给和扩建空间。</li>
+        </ol></details>
+      <button class="secondary-button guide-replay" type="button" id="onboardingReplay">重新查看开局引导</button>
+      <button class="secondary-button" value="close">返回山谷</button>
+    </form>
+  </dialog>
+
+  <section class="tutorial-tour" id="onboardingTour" aria-label="开局功能引导" hidden>
+    <div class="tutorial-focus" id="tutorialFocus" aria-hidden="true"></div>
+    <span class="tutorial-click-ring" id="tutorialClickRing" aria-hidden="true"></span>
+    <img class="tutorial-hand" id="tutorialHand" src="assets/props/petting-hand.webp" alt="" aria-hidden="true" draggable="false" />
+    <aside class="tutorial-card" id="tutorialCard" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+      <div class="tutorial-step-label"><span id="onboardingStepLabel">1 / 7</span><b id="onboardingZoneLabel">时间功能区</b></div>
+      <h2 id="onboardingTitle">先看时间，再决定行动</h2>
+      <p id="onboardingText">这里显示当前时段、具体时间和一天进度。点击“30 分钟”会推进世界，新的事件也会随时间出现。</p>
+      <p class="tutorial-demo-note"><i aria-hidden="true"></i><span id="onboardingDemoText">手指正在演示可操作位置</span></p>
+      <div class="onboarding-progress" id="onboardingProgress" role="progressbar" aria-label="开局引导进度" aria-valuemin="1" aria-valuemax="7" aria-valuenow="1"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="onboarding-actions">
+        <button type="button" class="secondary-button" id="onboardingPrev" disabled>上一步</button>
+        <button type="button" class="primary-button" id="onboardingNext">下一处</button>
+      </div>
+      <button type="button" class="onboarding-skip" id="onboardingSkip">跳过功能引导</button>
+    </aside>
+  </section>
+
+  <dialog id="calendarDialog" aria-labelledby="calendarTitle">
+    <form method="dialog" class="calendar-sheet">
+      <button class="dialog-close calendar-close" aria-label="关闭">×</button>
+      <header class="calendar-hero">
+        <div>
+          <p>山谷照管计划</p>
+          <h2 id="calendarTitle">家园经营日历</h2>
+          <span>只记录经营排期，天气会在新一天到来时揭晓</span>
+        </div>
+      </header>
+      <div class="calendar-body">
+        <span class="calendar-page calendar-page-left" aria-hidden="true"></span><span class="calendar-page calendar-page-right" aria-hidden="true"></span>
+        <div class="calendar-toolbar">
+          <button type="button" class="calendar-nav" id="calendarPrev" aria-label="上一个经营月"><span aria-hidden="true">←</span></button>
+          <div><small>每月 28 天</small><b id="calendarMonthLabel">春季 · 第 1 月</b></div>
+          <button type="button" class="calendar-today" id="calendarToday">回到今天</button>
+          <button type="button" class="calendar-nav" id="calendarNext" aria-label="下一个经营月"><span aria-hidden="true">→</span></button>
+        </div>
+        <div class="calendar-weekdays" role="row"><span role="columnheader">周一</span><span role="columnheader">周二</span><span role="columnheader">周三</span><span role="columnheader">周四</span><span role="columnheader">周五</span><span role="columnheader">周六</span><span role="columnheader">周日</span></div>
+        <div class="calendar-layout">
+          <div class="calendar-grid" id="calendarGrid" role="grid" aria-label="28 天经营月历" aria-rowcount="4" aria-colcount="7"></div>
+          <aside class="calendar-detail" id="calendarDetail" aria-live="polite"></aside>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dayDialog" aria-labelledby="dayTitle">
+    <form method="dialog" class="dialog-sheet day-sheet">
+      <p class="dialog-kicker">一天结束</p>
+      <h2 id="dayTitle">山谷安静下来了</h2>
+      <div class="day-results" id="dayResults"></div>
+      <div class="day-actions">
+        <button class="secondary-button" type="button" id="shareDayButton">抄写今日明信片</button>
+        <button class="primary-button" id="nextDayButton" value="close">迎接新的一天</button>
+      </div>
+    </form>
+  </dialog>
+
+  <section class="start-menu" id="startMenu" hidden>
+    <div class="start-menu-veil" aria-hidden="true"></div>
+    <div class="start-menu-card" role="dialog" aria-modal="true" aria-labelledby="startTitle">
+      <p class="dialog-kicker">山谷照管期</p>
+      <h2 id="startTitle">山谷动物家园</h2>
+      <p id="startStory">救助站门口多了一只纸箱。柯基奶糖已经把这里当成家，纸箱里还有细小的鼻音。你要决定先喂饱奶糖，还是先去安置那只受惊的垂耳兔。</p>
+      <ul class="start-promises">
+        <li>换一只伙伴，同一地点会变成另一种玩法</li>
+        <li>天气、时段和睡眠会改写明天的状态</li>
+        <li>一天结束后可以抄走今日明信片</li>
+      </ul>
+      <div class="start-actions">
+        <button type="button" class="primary-button" id="startBegin">接手这座家园</button>
+        <button type="button" class="secondary-button" id="startContinue" hidden>继续经营</button>
+        <button type="button" class="secondary-button" id="startReset" hidden>重新开局</button>
+      </div>
+    </div>
+  </section>
+  <script src="vendor/gsap.min.js"></script>
+  <script src="game.js?v=80"></script>
+</body>
+</html>
